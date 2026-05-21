@@ -4,7 +4,6 @@
 # 빌드 결과물 (PyInstaller)
 build/
 dist/
-*.spec
 
 # 캡처 사진 (현장 데이터는 각 PC에서 보관)
 data/captures/
