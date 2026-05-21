@@ -27,16 +27,27 @@ def tq(text, x, y_cv2, size, color_bgr):
     """한글 텍스트 대기열에 추가. y_cv2 = OpenCV baseline y."""
     _tq.append((text, x, max(0, y_cv2 - size), size, color_bgr))
 
-def flush_tq(img):
-    """대기열의 텍스트를 PIL로 img에 한 번에 렌더링."""
+def flush_tq(img, x_offset=0):
+    """대기열의 텍스트를 PIL로 img에 한 번에 렌더링.
+    x_offset: 변환할 img의 시작 x 좌표 (패널처럼 일부 영역만 변환할 때 사용)
+    """
     global _tq
     if not _tq or not _PIL_OK:
         _tq = []; return
-    pil = _PILImage.fromarray(img[:, :, ::-1].copy())
-    draw = ImageDraw.Draw(pil)
-    for text, x, y, sz, bgr in _tq:
-        draw.text((x, y), text, font=_kfont(sz), fill=(bgr[2], bgr[1], bgr[0]))
-    img[:] = np.array(pil)[:, :, ::-1]
+    if x_offset > 0:
+        # 패널 영역만 변환 (전체 캔버스 대신 300px 폭만 처리)
+        sub = img[:, x_offset:]
+        pil = _PILImage.fromarray(sub[:, :, ::-1].copy())
+        draw = ImageDraw.Draw(pil)
+        for text, x, y, sz, bgr in _tq:
+            draw.text((x - x_offset, y), text, font=_kfont(sz), fill=(bgr[2], bgr[1], bgr[0]))
+        img[:, x_offset:] = np.array(pil)[:, :, ::-1]
+    else:
+        pil = _PILImage.fromarray(img[:, :, ::-1].copy())
+        draw = ImageDraw.Draw(pil)
+        for text, x, y, sz, bgr in _tq:
+            draw.text((x, y), text, font=_kfont(sz), fill=(bgr[2], bgr[1], bgr[0]))
+        img[:] = np.array(pil)[:, :, ::-1]
     _tq = []
 
 # .exe(PyInstaller frozen)와 개발 환경 양쪽에서 경로가 올바르게 잡히도록
@@ -919,7 +930,7 @@ def main():
             flush_tq(video)                          # 영상 한글 텍스트 렌더링
             canvas[:CANVAS_H, :FW] = video[:CANVAS_H, :FW]
             draw_panel(canvas, FW, state, btns_ref[0])
-            flush_tq(canvas)                         # 패널 한글 텍스트 렌더링
+            flush_tq(canvas, x_offset=FW)            # 패널 한글 텍스트 렌더링 (패널 영역만)
             cv2.imshow(WIN_NAME, canvas)
         except Exception as e:
             print(f"[WARN] Draw error: {e}")
