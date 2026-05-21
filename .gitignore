@@ -1,0 +1,27 @@
+# 가상환경
+.venv/
+
+# 빌드 결과물 (PyInstaller)
+build/
+dist/
+*.spec
+
+# 캡처 사진 (현장 데이터는 각 PC에서 보관)
+data/captures/
+data/logs/
+
+# Python 캐시
+__pycache__/
+*.pyc
+*.pyo
+
+# Claude Code 로컬 설정
+.claude/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
