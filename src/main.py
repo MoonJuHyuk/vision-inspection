@@ -47,6 +47,17 @@ else:
 sys.path.insert(0, _BASE_DIR)
 from config.settings import *
 
+# ── 자동 업데이트 (frozen .exe 실행 시에만) ──────────
+if getattr(sys, 'frozen', False):
+    _SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+    if _SRC_DIR not in sys.path:
+        sys.path.insert(0, _SRC_DIR)
+    try:
+        from updater import check_and_update
+        check_and_update(VERSION)
+    except Exception as _ue:
+        print(f"[UPDATE] 업데이터 로드 실패: {_ue}")
+
 # 저장 경로를 실행파일 기준 절대경로로 고정
 SAVE_DIR = os.path.join(_BASE_DIR, SAVE_DIR)
 

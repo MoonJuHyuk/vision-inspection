@@ -1,0 +1,45 @@
+name: Build & Release
+
+# v* 태그를 push하면 자동 실행 (예: git tag v1.0.1 && git push origin v1.0.1)
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Python 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 의존성 설치
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: exe 빌드
+        run: |
+          pyinstaller vision_inspection.spec --noconfirm --clean
+
+      - name: 배포 폴더 구성
+        run: |
+          New-Item -ItemType Directory -Force dist\vision_inspection\config | Out-Null
+          Copy-Item config\settings.py dist\vision_inspection\config\settings.py
+          New-Item -ItemType Directory -Force dist\vision_inspection\data\captures | Out-Null
+
+      - name: zip 압축
+        run: |
+          Compress-Archive -Path dist\vision_inspection -DestinationPath vision_inspection.zip
+
+      - name: GitHub Release 생성 및 업로드
+        uses: softprops/action-gh-release@v2
+        with:
+          files: vision_inspection.zip
+          generate_release_notes: true
